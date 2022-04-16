@@ -49,3 +49,22 @@ async def divider_test(device):
             assert test_quotient == int(dividend / divisor) & 0xF
 
             assert not device.fault.value
+
+@cocotb.test()
+async def divider_fault_test(device):
+    for dividend in range(-8, 7):
+        device.dividend.value = dividend
+        device.divisor.value = 0
+
+        device.start.value = 1
+        await cycle_clock(device)
+        device.start.value = 0
+
+        cycle = 0
+        while not device.ready.value:
+            await cycle_clock(device)
+            cycle += 1
+            if cycle > 4:
+                assert False, 'cycle count exceeded'
+
+        assert device.fault.value == 1
