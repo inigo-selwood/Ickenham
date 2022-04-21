@@ -3,7 +3,7 @@ from cocotb.triggers import Timer
 from cocotb_test.simulator import run
 
 
-def test_divider():
+def test_adder():
     run(verilog_sources=['../source/arithmetic/adder.v'],
         toplevel='Adder',
         module='test_adder')

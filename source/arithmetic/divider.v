@@ -26,12 +26,12 @@ output reg signed [WIDTH - 1:0] remainder;
 output reg fault;
 output reg ready;
 
-`ifdef COCOTB_SIM
-    initial begin
-        $dumpfile("divider.vcd");
-        $dumpvars(0, Divider);
-    end
-`endif
+// `ifdef COCOTB_SIM
+//     initial begin
+//         $dumpfile("divider.vcd");
+//         $dumpvars(0, Divider);
+//     end
+// `endif
 
 reg [$clog2(WIDTH):0] iteration;
 
@@ -83,7 +83,7 @@ always @(posedge clock) begin
             ready <= 1;
         end
 
-        // Similarly, division of a value _by_ a value (ignoring sign) can be 
+        // Similarly, division of a value _by_ a value (ignoring sign) can be
         // worked out fast
         else if(dividend == divisor) begin
             quotient <= 1;
@@ -98,29 +98,29 @@ always @(posedge clock) begin
 
         // With a bit more effort, we can preempt divisions where the
         // denominator is larger than the numerator -- they'll always be zero
-        else if(divisor[WIDTH - 1] == 0 
-                && dividend[WIDTH - 1] == 0 
+        else if(divisor[WIDTH - 1] == 0
+                && dividend[WIDTH - 1] == 0
                 && divisor > dividend) begin
             ready <= 1;
             quotient <= 0;
             remainder <= dividend;
         end
-        else if(divisor[WIDTH - 1] == 0 
-                && dividend[WIDTH - 1] 
+        else if(divisor[WIDTH - 1] == 0
+                && dividend[WIDTH - 1]
                 && divisor > (~dividend + 1)) begin
             ready <= 1;
             quotient <= 0;
             remainder <= divisor + dividend;
         end
-        else if(divisor[WIDTH - 1] 
-                && dividend[WIDTH - 1] == 0 
+        else if(divisor[WIDTH - 1]
+                && dividend[WIDTH - 1] == 0
                 && (~divisor + 1) > dividend) begin
             ready <= 1;
             quotient <= 0;
             remainder <= dividend + divisor;
         end
-        else if(divisor[WIDTH - 1] 
-                && dividend[WIDTH - 1] 
+        else if(divisor[WIDTH - 1]
+                && dividend[WIDTH - 1]
                 && divisor < dividend) begin
             ready <= 1;
             quotient <= 0;
@@ -140,8 +140,8 @@ always @(posedge clock) begin
             {accumulator[0][WIDTH:1], quotient_[0][0]} <= {(WIDTH + 1){1'b0}};
             {accumulator[0][0], quotient_[0][WIDTH - 1:1]} <=
                     dividend[WIDTH - 1] ? (~dividend + 1) : dividend;
-            
-            // Store the sign values for later use, since we've just removed 
+
+            // Store the sign values for later use, since we've just removed
             // that information from the registers
             dividendSign <= dividend[WIDTH - 1];
             divisorSign <= divisor[WIDTH - 1];
@@ -154,7 +154,7 @@ always @(posedge clock) begin
     // either increment state or finish it
     else if(ready == 0) begin
 
-        // The division is finished after WIDTH cycles -- so evaluate the 
+        // The division is finished after WIDTH cycles -- so evaluate the
         // quotient and remainder
         if(iteration == WIDTH - 1) begin
             ready <= 1;
@@ -165,17 +165,17 @@ always @(posedge clock) begin
                 quotient <= ~quotient_[1] + 1;
             else
                 quotient <= quotient_[1];
-            
+
             // If the remainder is positive, it doesn't need alteration
             if(accumulator[1][WIDTH:1] == 0)
                 remainder <= 0;
-            
+
             // When the operation has finished, the remainder can be found in
             // the upper 32 bits of the accumulator.
             //
             // For signed inputs, the remainder needs some adjustment:
             // - The sign of the remainder has to match the sign of the divisor
-            // - If the quotient is negative, the remainder needs to be 
+            // - If the quotient is negative, the remainder needs to be
             //   subtracted from the divisor to form the result
             else begin
                 case({divisorSign, divisorSign == dividendSign})
